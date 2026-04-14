@@ -1,0 +1,71 @@
+# ─────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─────────────────────────────────────────
+# Jupyter
+# ─────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ─────────────────────────────────────────
+# Data files (too large for GitHub)
+# Download via instructions in data/README.md
+# ─────────────────────────────────────────
+data/*.csv
+data/*.parquet
+data/*.nc
+data/*.h5
+data/*.hdf5
+
+# ─────────────────────────────────────────
+# Large prediction outputs (reproducible
+# by running the notebook — skip these)
+# ─────────────────────────────────────────
+outputs/predictions/
+
+# ─────────────────────────────────────────
+# Model checkpoints & saved weights
+# ─────────────────────────────────────────
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.ckpt
+models/
+
+# ─────────────────────────────────────────
+# Environments
+# ─────────────────────────────────────────
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# ─────────────────────────────────────────
+# OS / Editor
+# ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─────────────────────────────────────────
+# Logs & temp
+# ─────────────────────────────────────────
+*.log
+*.tmp
