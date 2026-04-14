@@ -1,0 +1,7 @@
+model,horizon,median_km,mean_km,p75_km,p90_km
+LightGBM (iterative),12h,29.6,39.31,50.59,79.46
+LightGBM (iterative),24h,91.02,116.42,155.22,233.22
+LightGBM (iterative),48h,276.93,323.29,427.63,628.25
+XGBoost (iterative),12h,29.45,39.28,51.13,80.18
+XGBoost (iterative),24h,90.45,115.52,153.61,235.2
+XGBoost (iterative),48h,271.91,320.89,427.97,622.32
