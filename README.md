@@ -1,11 +1,11 @@
 # 🌀 Horizon-Consistent Multi-Step Cyclone Trajectory Prediction
 ### Bay of Bengal · IBTrACS 1990–2022 · 3h / 12h / 24h Forecasting
 
-> A comprehensive 15-model benchmark for multi-horizon cyclone track prediction, featuring the **Subset-Expert Context-Aware Ensemble (SECE)** — a hybrid system achieving state-of-the-art positional accuracy across all forecasting horizons.
+> A comprehensive 15-model benchmark for multi-horizon cyclone track prediction, featuring the **Subset-Expert Context-Aware Ensemble (SECE)** - a hybrid system achieving state-of-the-art positional accuracy across all forecasting horizons.
 
 ---
 
-## 📊 Key Results
+## **Key Results**
 
 | Horizon | SECE Median Error | 2nd Best | Gap |
 |---------|:-----------------:|----------|-----|
@@ -17,17 +17,17 @@
 
 ---
 
-## 🏗️ Proposed Architectures
+## **Proposed Architectures**
 
-### 1. SECE — Subset-Expert Context-Aware Ensemble
+### 1. SECE - Subset-Expert Context-Aware Ensemble
 A two-tier hierarchical stacking framework with 28 base learners:
 - **Tier 1:** CatBoost, XGBoost, LightGBM, Random Forest trained across 6 physics-informed feature subsets + BLSTM and CNN-GRU sequential models
 - **Tier 2:** Context-aware LightGBM meta-learner (3h/12h) + Ridge regularization (24h), trained exclusively on out-of-fold validation predictions to prevent label leakage
 
-### 2. PRC — Persistence Residual Cascade
+### 2. PRC - Persistence Residual Cascade
 A two-stage physics-informed corrector: persistence baseline + LightGBM residual rectification. Highly efficient for operational deployment.
 
-### 3. CB+MotionNN — CatBoost with Neural Residual Correction
+### 3. CB+MotionNN - CatBoost with Neural Residual Correction
 CatBoost base predictor coupled with a 64-32-16 feedforward MotionNN that corrects kinematic residual bias in kilometer space using 9 kinematic features.
 
 ---
@@ -79,9 +79,9 @@ After downloading, place the file in the `data/` directory and run the notebook 
 
 ---
 
-## ⚙️ Standardized Training Protocol
+##  **Standardized Training Protocol**
 
-All 23 models use **identical hyperparameters** to ensure fair cross-architecture comparison:
+All 23 models use **uniform hyperparameters** to ensure fair cross-architecture comparison:
 
 | Parameter | Value |
 |-----------|-------|
@@ -96,7 +96,7 @@ All 23 models use **identical hyperparameters** to ensure fair cross-architectur
 
 ---
 
-## 🚀 Getting Started
+## **Installation Procedures**
 
 ### 1. Clone the repo
 ```bash
@@ -119,7 +119,7 @@ jupyter notebook notebook/multi-horizon-experiment.ipynb
 
 ---
 
-## 📦 Requirements
+## **Requirements**
 
 See `requirements.txt`. Main dependencies:
 - `pandas`, `numpy`, `scikit-learn`
@@ -155,23 +155,3 @@ The notebook generates:
 - Fixed hyperparameter protocol prevents individual models from reaching tuned performance ceiling
 - Maximum evaluated horizon is 24h (48h+ would require architectural modifications)
 
----
-
-## 📄 Citation
-
-If this work is accepted, citation details will be added here. For now, if you use this codebase please link back to this repository.
-
-```bibtex
-@article{cyclone_sece_2026,
-  title   = {Horizon-Consistent Multi-Step Cyclone Trajectory Prediction over the Bay of Bengal},
-  author  = {Anonymous},
-  year    = {2026},
-  note    = {Under review}
-}
-```
-
----
-
-## 📬 Contact
-
-For questions about the dataset, methodology, or results, please open a GitHub Issue.
