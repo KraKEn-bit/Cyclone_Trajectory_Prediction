@@ -1,0 +1,11 @@
+﻿
+__pycache__/
+*.pyc
+*.log
+*.aux
+*.out
+datasets/era5_raw/
+datasets/tracks_era5.csv
+results/logs/
+*.nc
+.cdsapirc
