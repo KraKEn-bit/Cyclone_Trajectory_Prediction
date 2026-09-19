@@ -1,37 +1,48 @@
-# NEW WAY — ERA5 track (frozen old pipeline)
+# ERA5-NEW-Analysis
 
-All new code, datasets, and results live here.
-Do not modify `Final_Cyclone_Pred_Results_P-3/` datasets in place.
+**SECE v2 Phase 3 · ERA5-point environ expert · Bay of Bengal / NIO track benchmark**
 
-## Sequence (lock date window before architecture)
+This folder is the **frozen, reproducible** line for:
 
-0. IBTrACS quality-by-era (no ERA5)
-1. ERA5 download (year files) + join to tracks
-2. Date-window ablation (simple LGB, DEV seeds only)
-3. Lock window in `docs/date_window_decision.md`
-4. Then architecture / SECE-style work
+- IBTrACS + **ERA5** (storm-centre point features)
+- **Eight** tree/hybrid systems at **3 / 12 / 24 / 48 h**
+- **Leakage-aware** dev vs held-out seed protocol
+- Exported predictions, significance tests, and paper tables
 
-## Date windows (proposed; end year = last track year)
+## Read first
 
-| Window | Genesis years |
-|--------|----------------|
-| Full ERA5 overlap | 1940–2024 |
-| Satellite-era | 1979–2024 |
-| Modern (paper-like) | 1990–2024 |
+- **[`docs/PROJECT_COMPLETE_GUIDE.md`](docs/PROJECT_COMPLETE_GUIDE.md)** — end-to-end project guide
+- **[`docs/paper_writeup_data/README.md`](docs/paper_writeup_data/README.md)** — CSV/MD tables tied to manuscript numbers
 
-Held-out seeds from Task B are **not** used for this comparison.
+## Dependency
 
-## Power cut / sleep
-
-Leave the laptop **plugged in**. Run:
+Training imports from **sibling** directory (repo root):
 
 ```text
-NEW WAY\run_overnight.bat
+../Final_Cyclone_Pred_Results_P-3/
+  pipeline_common.py
+  sece_v2_train.py
+  eval_protocol.py
 ```
 
-- Completed ERA5 **year** files in `datasets/era5_raw/` are never re-downloaded.
-- Incomplete year `.nc.part` files are discarded and that year is retried.
-- Join appends to `datasets/tracks_era5.csv` and skips SID+time already written.
-- After logon (power restored), scheduled task `Research1_NEWWAY_ERA5` restarts this script if not finished.
+## Install and verify
 
-**CDS key required** before any NetCDF arrives. Put `url` + `key` in `NEW WAY\\.cdsapirc` (see `docs/era5_cds_setup.md`). The runner waits and retries; it does not start over.
+```bash
+pip install -r requirements.txt
+python scripts/build_paper_writeup_data.py
+```
+
+## Held-out SECE medians (km)
+
+| 3 h | 12 h | 24 h | 48 h |
+|----:|-----:|-----:|-----:|
+| 4.895 | 35.538 | 101.186 | 246.331 |
+
+See `docs/paper_writeup_data/01_heldout_comparison_ci_wilcoxon.csv`.
+
+## Do not expect in this folder
+
+- `datasets/era5_raw/` NetCDF (download locally; see `docs/era5_cds_setup.md`)
+- CNN-GRU / BLSTM held-out rows (scoped out after exploratory dev)
+
+Parent repo overview: [`../README.md`](../README.md).
