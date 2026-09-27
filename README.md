@@ -1,8 +1,8 @@
 # Horizon-Consistent Multi-Step Cyclone Trajectory Prediction over the Bay of Bengal
 
-**IBTrACS v4 ù North Indian Ocean ù 3 h / 12 h / 24 h track forecasting**
+**IBTrACS - North Indian Ocean | 3 h / 12 h / 24 h track forecasting**
 
-> **Anonymous repository.** This code accompanies a blind peer-review submission. Author names, institutional affiliations, and personal repository links are omitted here. If you use this work, cite the published paper when available.
+> **Anonymous repository.** Code release: full source, configs, and reproduction scripts will be published upon paper acceptance. Until then, this repository documents the research contribution without releasing implementation details.
 
 We report a **23-model** benchmark (11 classical, 9 deep, 3 proposed) on multi-horizon cyclone **track** prediction, with the **top 15 models per horizon** under a **uniform training protocol**. The primary system is the **Subset-Expert Context-Aware Ensemble (SECE)**: 28 base learners (tree models on five physics-informed feature subsets plus the full 49-D set, together with Bidirectional LSTM and CNN-GRU) fused by a context-aware **LightGBM** meta-learner at 3 h / 12 h and **Ridge** regression at 24 h, using **out-of-fold** base predictions only at the meta stage. Supplementary architectures **PRC** (Persistence Residual Cascade) and **CB+MotionNN** (CatBoost + kinematic MLP residual) are included as physics-informed baselines. A **zero-shot** evaluation on Western Pacific IBTrACS data (no retraining) assesses cross-basin transfer.
 
@@ -54,11 +54,11 @@ Place the file under **`Data/`**, then run **`Notebook/multi-horizon-finalized-e
 
 ### 49 engineered features
 
-Four physics-informed groups plus missingness indicators (revision manuscript ùII):
+Four physics-informed groups plus missingness indicators (revision manuscript ¬ùII):
 
 | Group | Count | Content |
 |-------|------:|---------|
-| **Position** | 9 | Lat/lon, interaction, lags *t*?1ù*t*?3 |
+| **Position** | 9 | Lat/lon, interaction, lags *t*?1¬ù*t*?3 |
 | **Motion** | 16 | Displacements, speed, bearing sin/cos, acceleration, trends |
 | **Physics** | 7 | Curvature, stability, consistency, seasonality, recurvature proxy |
 | **Environment** | 8 | Distance to land, landfall, wind estimate, speed/dir, BoB centroid distance, rates of change |
@@ -72,7 +72,7 @@ Four physics-informed groups plus missingness indicators (revision manuscript ùI
 
 ### SECE (Tier 1 + Tier 2)
 
-- **Tier 1:** 28 predictive signals ù CatBoost, XGBoost, LightGBM, Random Forest on **five** subset views **plus full features**, plus BLSTM and CNN-GRU.
+- **Tier 1:** 28 predictive signals ¬ù CatBoost, XGBoost, LightGBM, Random Forest on **five** subset views **plus full features**, plus BLSTM and CNN-GRU.
 - **Tier 2:** LightGBM **context router** (9 storm-level features) at **3 h / 12 h**; **Ridge** stack at **24 h**. Meta-learners trained on **validation out-of-fold** base predictions only.
 
 ### PRC
