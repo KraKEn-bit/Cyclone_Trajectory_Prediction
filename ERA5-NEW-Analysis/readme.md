@@ -4,6 +4,8 @@
 
 **Bay of Bengal · North Indian Ocean · IBTrACS v4 + ERA5 · 3 / 12 / 24 / 48 h**
 
+> **Anonymous repository (blind review).** No author-identifying links in this folder. Clone the repository URL provided by the venue or authors after acceptance.
+
 This directory is the **locked, reproducible** code and data export line for the IEEE conference paper (and aligned journal / AMS WAF manuscripts). It implements **eight** tree/hybrid systems, **SECE v2 Phase 3** with a dedicated **environ + ERA5** subset expert, and a **development vs held-out seed** protocol that corrects **test-set leakage** from earlier SECE iterations.
 
 **Parent repo (legacy IBTrACS-only benchmark):** [`../README.md`](../README.md)  
@@ -244,9 +246,10 @@ python scripts/generate_paper_figures.py
 
 ## Quick start
 
+From the repository root (after clone):
+
 ```bash
-git clone https://github.com/KraKEn-bit/Cyclone_Trajectory_Prediction.git
-cd Cyclone_Trajectory_Prediction/ERA5-NEW-Analysis
+cd ERA5-NEW-Analysis
 pip install -r requirements.txt
 python scripts/build_paper_writeup_data.py
 ```
