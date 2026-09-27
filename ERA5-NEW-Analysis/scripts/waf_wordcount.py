@@ -8,7 +8,9 @@ from pathlib import Path
 TEX = Path(r"e:\Research Paper\Research-1\NEW WAY\Paper Writing\WAF\waf_manuscript.tex")
 tex = TEX.read_text(encoding="utf-8")
 start = tex.find(r"\section{Introduction}")
-data = tex.find(r"\datastatement")
+data = tex.find(r"\availstatement")
+if data < 0:
+    data = tex.find(r"\datastatement")
 body = tex[start:data]
 body = body.replace(r"\bob{}", "Bay of Bengal")
 body = body.replace(r"\sece{}", "SECE")

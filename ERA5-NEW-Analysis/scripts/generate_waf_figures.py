@@ -6,10 +6,11 @@ Other encodings (model family, horizon) use the remaining Okabe–Ito colours
 so they are not confused with that split.
 
 Outputs (PNG 300 dpi + PDF vector) under Paper Writing/WAF/:
-  fig03featimp.{png,pdf}   Figure A  04_environ_expert_feature_importance.csv
-  fig04era5hist.{png,pdf}  Figure B  05_seed0_lgb_era5_vs_trackonly_per_storm.csv
-  fig05bench4h.{png,pdf}   Figure C  held-out prediction CSVs -> JSON per horizon
-  fig06ablation.{png,pdf}  Figure D  full_experiment_summary_table.csv
+  fig03ablation.{png,pdf}  development ablation trend
+  fig04bench4h.{png,pdf}   held-out benchmark 2x2
+  fig05era5hist.{png,pdf}  per-storm ERA5 delta histograms
+  fig06featimp.{png,pdf}   environ-expert gain shares
+  fig08errorcdf.{png,pdf}  pooled error CDFs (24/48 h, SECE vs leaders)
 """
 from __future__ import annotations
 
@@ -25,6 +26,15 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import generate_paper_figures as gpf  # noqa: E402
+import pipeline_era5  # noqa: E402
+from pipeline_common import (  # noqa: E402
+    _prepare_eval_frame,
+    apply_physics_features,
+    apply_qc,
+    build_mh_df,
+    sample_errors_for_model,
+    storm_split,
+)
 
 OUT = ROOT / "Paper Writing" / "WAF"
 DATA = ROOT / "docs" / "paper_writeup_data"
@@ -85,6 +95,36 @@ def _apply_style() -> None:
     plt.rcParams.update(STYLE)
 
 
+PANEL_LETTERS = "abcdefghijklmnopqrstuvwxyz"
+
+
+def _panel_tag(ax, letter: str) -> None:
+    ax.text(
+        0.02,
+        0.98,
+        f"({letter})",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=12,
+        fontweight="bold",
+    )
+
+
+def _pooled_eval_frame(horizon: str) -> pd.DataFrame:
+    merge_keys = ["SID", "ISO_TIME", "LAT", "LON"]
+    parts = []
+    df_raw = pd.read_csv(pipeline_era5.DATA_PATH)
+    df = apply_physics_features(apply_qc(df_raw))
+    mh_df = build_mh_df(df)
+    for seed in gpf.HELDOUT_SEEDS:
+        _, _, test_storms = storm_split(mh_df, seed=seed)
+        base = df[df["SID"].isin(test_storms)] if horizon == "3h" else mh_df[mh_df["SID"].isin(test_storms)]
+        pred = pd.read_csv(gpf.PREDS_DIR / f"seed{seed}_predictions_{horizon}.csv")
+        parts.append(_prepare_eval_frame(base, pred, merge_keys))
+    return pd.concat(parts, ignore_index=True)
+
+
 def _grid(ax) -> None:
     ax.grid(True, ls=":", alpha=0.3, color="#666666")
     ax.set_axisbelow(True)
@@ -109,7 +149,8 @@ def draw_feature_importance() -> None:
     df = pd.read_csv(DATA / "04_environ_expert_feature_importance.csv")
     fig, axes = plt.subplots(1, 2, figsize=(10.6, 7.2), sharey=False)
 
-    for ax, horizon in zip(axes, ("24h", "48h")):
+    for idx, (ax, horizon) in enumerate(zip(axes, ("24h", "48h"))):
+        _panel_tag(ax, PANEL_LETTERS[idx])
         sub = df[df["horizon"] == horizon].sort_values("gain_share", ascending=True)
         colors = [ORANGE_ERA5 if bool(v) else BLUE_KIN for v in sub["is_era5"]]
         labels = [FEATURE_LABELS.get(f, f) for f in sub["feature"]]
@@ -132,7 +173,7 @@ def draw_feature_importance() -> None:
         bbox_to_anchor=(0.5, 1.02),
     )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
-    _save(fig, "fig03featimp")
+    _save(fig, "fig06featimp")
 
 
 def draw_era5_histograms() -> None:
@@ -141,7 +182,8 @@ def draw_era5_histograms() -> None:
     df = pd.read_csv(DATA / "05_seed0_lgb_era5_vs_trackonly_per_storm.csv")
     fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.6), sharey=False)
 
-    for ax, horizon in zip(axes, ("24h", "48h")):
+    for idx, (ax, horizon) in enumerate(zip(axes, ("24h", "48h"))):
+        _panel_tag(ax, PANEL_LETTERS[idx])
         d = df.loc[df["horizon"] == horizon, "delta_km"].astype(float)
         n = int(d.size)
         n_imp = int((d > 0).sum())
@@ -154,10 +196,12 @@ def draw_era5_histograms() -> None:
         ax.set_ylabel("Number of storms")
         ax.set_title(f"{HORIZON_LABEL[horizon]}  ({n_imp}/{n} improved)")
         _grid(ax)
-        ax.legend(loc="upper right", framealpha=0.92, edgecolor="#CCCCCC")
+        # 48 h bins peak under upper-right; keep 24 h legend on the right.
+        leg_loc = "upper left" if horizon == "48h" else "upper right"
+        ax.legend(loc=leg_loc, framealpha=0.92, edgecolor="#CCCCCC")
 
     fig.tight_layout()
-    _save(fig, "fig04era5hist")
+    _save(fig, "fig05era5hist")
 
 
 def _stats_to_records(rows) -> list[dict]:
@@ -199,7 +243,8 @@ def draw_benchmark_four_horizon() -> None:
     fig, axes = plt.subplots(2, 2, figsize=(15.2, 11.8))
     legend_handles = []
 
-    for ax, horizon in zip(axes.ravel(), ("3h", "12h", "24h", "48h")):
+    for idx, (ax, horizon) in enumerate(zip(axes.ravel(), ("3h", "12h", "24h", "48h"))):
+        _panel_tag(ax, PANEL_LETTERS[idx])
         rows = gpf._stats_rows_from_json(stats[horizon])
         handles = gpf.plot_benchmark_on_ax(
             ax,
@@ -251,7 +296,8 @@ def draw_ablation_trend() -> None:
     ]
     fig, axes = plt.subplots(2, 2, figsize=(10.8, 7.4), sharex=True)
 
-    for ax, horizon in zip(axes.ravel(), ("3h", "12h", "24h", "48h")):
+    for idx, (ax, horizon) in enumerate(zip(axes.ravel(), ("3h", "12h", "24h", "48h"))):
+        _panel_tag(ax, PANEL_LETTERS[idx])
         ys = []
         for exp in order:
             row = df[(df["experiment"] == exp) & (df["horizon"] == horizon)]
@@ -280,7 +326,97 @@ def draw_ablation_trend() -> None:
         ax.set_ylim(min(ys) - pad - 0.02, max(ys) + pad + 0.15)
 
     fig.tight_layout()
-    _save(fig, "fig06ablation")
+    _save(fig, "fig03ablation")
+
+
+def _wilcoxon_vs_sece(horizon: str, model: str) -> tuple[float | None, str]:
+    """Bonferroni-adjusted p for model vs SECE (stacking / XGBoost labels in CSV)."""
+    df = pd.read_csv(DATA / "01_heldout_comparison_ci_wilcoxon.csv")
+    row = df[(df["horizon"] == horizon) & (df["model"] == model)]
+    if row.empty:
+        return None, ""
+    p = float(row["p_value_bonferroni_vs_sece"].iloc[0])
+    if p < 0.001:
+        ps = "<0.001"
+    else:
+        ps = f"{p:.3f}"
+    sig = str(row["significant_bonferroni"].iloc[0]).upper() == "Y"
+    return p, ps + ("*" if sig else "")
+
+
+def draw_error_cdf() -> None:
+    """Pooled origin-level error CDFs: SECE vs stacking vs XGBoost at 3--48 h."""
+    _apply_style()
+    cdf_models = [
+        ("SECE v2 Phase3", "SECE", "#C48A00", 2.4),
+        ("Stacking Ensemble", "Stacking", BLUE_KIN, 2.0),
+        ("XGBoost", "XGBoost", VERM, 2.0),
+    ]
+    horizons = ("3h", "12h", "24h", "48h")
+    fig, axes = plt.subplots(2, 2, figsize=(11.2, 9.2), sharey=True)
+
+    for idx, (ax, horizon) in enumerate(zip(axes.ravel(), horizons)):
+        _panel_tag(ax, PANEL_LETTERS[idx])
+        frame = _pooled_eval_frame(horizon)
+        n_origins = len(frame)
+        medians: list[tuple[str, float, str]] = []
+        for full, short, color, lw in cdf_models:
+            err, _ = sample_errors_for_model(frame, horizon, full)
+            err = np.sort(err.astype(float))
+            med = float(np.median(err))
+            pct = (np.arange(1, err.size + 1) / err.size) * 100.0
+            ax.plot(err, pct, color=color, lw=lw, label=f"{short} ({med:.2f} km)")
+            medians.append((short, med, color))
+            ax.axvline(med, color=color, lw=0.9, ls="--", alpha=0.45)
+
+        ax.set_xlabel("Great-circle error (km)")
+        if idx % 2 == 0:
+            ax.set_ylabel("Empirical CDF (%)")
+        ax.set_title(f"{HORIZON_LABEL[horizon]} · nine held-out seeds pooled")
+        ax.set_ylim(0, 100)
+        ax.axhline(50, color=GREY, lw=0.8, ls=":", alpha=0.55)
+        _grid(ax)
+
+        _, p_stk = _wilcoxon_vs_sece(horizon, "Stacking Ensemble")
+        _, p_xgb = _wilcoxon_vs_sece(horizon, "XGBoost")
+        note = (
+            f"n = {n_origins:,} origins\n"
+            f"Wilcoxon vs SECE (Bonferroni):\n"
+            f"  Stacking p = {p_stk}\n"
+            f"  XGBoost p = {p_xgb}"
+        )
+        ax.text(
+            0.98,
+            0.04,
+            note,
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8,
+            color="#333333",
+            linespacing=1.25,
+            bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#CCCCCC", alpha=0.92),
+        )
+
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=3,
+        frameon=False,
+        fontsize=9,
+        bbox_to_anchor=(0.5, 1.01),
+        title="Pooled median in legend; dashed vertical = same median",
+        title_fontsize=9,
+    )
+    fig.suptitle(
+        "Origin-level great-circle error CDFs (SECE Phase 3 vs two strongest long-lead baselines)",
+        fontsize=12,
+        y=1.04,
+    )
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    _save(fig, "fig08errorcdf")
 
 
 def main() -> None:
@@ -294,6 +430,8 @@ def main() -> None:
         draw_ablation_trend()
     if run_all or "c" in only:
         draw_benchmark_four_horizon()
+    if run_all or "e" in only:
+        draw_error_cdf()
     print("WAF figures done.")
 
 

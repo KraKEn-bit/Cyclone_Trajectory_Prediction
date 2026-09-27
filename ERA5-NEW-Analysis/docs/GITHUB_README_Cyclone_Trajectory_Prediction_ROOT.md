@@ -31,7 +31,7 @@ Wilcoxon signed-rank tests on paired per-storm medians; family-wise threshold **
 
 | Path | Contents |
 |------|----------|
-| **[`ERA5-NEW-Analysis/`](ERA5-NEW-Analysis/)** | **Main line:** pipelines, scripts, datasets (modeling CSV), held-out exports, docs |
+| **[`ERA5-NEW-Analysis/`](ERA5-NEW-Analysis/)** | **Main line:** pipelines, scripts, datasets (modeling CSV), held-out exports, docs, manuscripts |
 | **[`Final_Cyclone_Pred_Results_P-3/`](Final_Cyclone_Pred_Results_P-3/)** | Minimal **SECE trainer** (`pipeline_common.py`, `sece_v2_train.py`, `eval_protocol.py`) â€” must stay **sibling** of `ERA5-NEW-Analysis/` |
 | `Notebook/`, `Outputs/`, `Data/`, `Datasets/` | Earlier IBTrACS-centric experiments and assets |
 | `README.md` | This file |
@@ -110,7 +110,7 @@ Raw NetCDF is **not** in git; modeling CSV `datasets/bangladesh_nextstep_dataset
 
 ## Evaluation integrity
 
-Earlier SECE iterations suffered **test-set leakage** (architecture phases advanced using test leaderboard feedback). The ERA5 line **freezes** Phase 3 + environ expert on **development seeds**, then runs **held-out seeds once**. This failure mode and fix are documented transparently in the manuscripts and in the project guide (§ evaluation integrity).
+Earlier SECE iterations suffered **test-set leakage** (architecture phases advanced using test leaderboard feedback). The ERA5 line **freezes** Phase 3 + environ expert on **development seeds**, then runs **held-out seeds once**. This failure mode and fix are documented transparently in the manuscripts and in [`Full_Project_Story_Plain_Language.md`](ERA5-NEW-Analysis/Paper%20Writing/Read%20MADE/Full_Project_Story_Plain_Language.md).
 
 ---
 

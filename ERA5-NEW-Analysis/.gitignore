@@ -1,11 +1,12 @@
-﻿
-__pycache__/
-*.pyc
-*.log
-*.aux
-*.out
+# Manuscripts stay local — publish code, data tables, and figures only
+*.tex
+Paper Writing/
+
+.cdsapirc
+WAITING_FOR_CDS.txt
 datasets/era5_raw/
 datasets/tracks_era5.csv
 results/logs/
 *.nc
-.cdsapirc
+*.nc.part
+*.csv.tmp

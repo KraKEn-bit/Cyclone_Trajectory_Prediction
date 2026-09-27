@@ -509,7 +509,7 @@ def draw_tsne() -> None:
         "ytick.labelsize": 14,
         "legend.fontsize": 12,
     })
-    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+    fig, axes = plt.subplots(2, 2, figsize=(14, 13))
     fig.suptitle(
         f"t-SNE Projection of {len(feat_cols)}-Dimensional Training Feature Space\n"
         f"(n = {len(sub):,} training samples | KL = {kl:.3f} | perplexity = {perplexity})",
@@ -518,28 +518,46 @@ def draw_tsne() -> None:
         y=0.98,
     )
 
+    # Full embedding extent (small margin); do not percentile-crop—outlier islands are real t-SNE structure.
+    pad_frac = 0.03
+    xlo, xhi = float(emb[:, 0].min()), float(emb[:, 0].max())
+    ylo, yhi = float(emb[:, 1].min()), float(emb[:, 1].max())
+    pad_x = pad_frac * (xhi - xlo)
+    pad_y = pad_frac * (yhi - ylo)
+    xlim = (xlo - pad_x, xhi + pad_x)
+    ylim = (ylo - pad_y, yhi + pad_y)
+
+    def legend_below(ax, ncol: int = 2, fontsize: int = 10) -> None:
+        ax.legend(
+            fontsize=fontsize,
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.18),
+            ncol=ncol,
+            markerscale=1.8,
+            framealpha=0.95,
+            borderaxespad=0.0,
+        )
+
     nat_u = nature.str.upper().str.strip()
     nature_colors = {"TS": "#4C78A8", "NR": "#E45756", "DS": "#54A24B", "MX": "#F58518", "ET": "#B279A2", "SS": "#9D755D"}
     ax = axes[0, 0]
-    plotted = np.zeros(len(sub), dtype=bool)
-    for code in ["TS", "NR", "DS", "MX", "ET", "SS"]:
+    for code, col in nature_colors.items():
         m = nat_u.eq(code)
         if not m.any():
             continue
-        plotted |= m.values
         ax.scatter(
             emb[m, 0],
             emb[m, 1],
             s=8,
             alpha=0.55,
-            c=nature_colors.get(code, "#888"),
+            c=col,
             label=f"{code} (n={int(m.sum())})",
         )
-    other = ~plotted
+    other = ~nat_u.isin(list(nature_colors.keys()))
     if other.any():
-        ax.scatter(emb[other, 0], emb[other, 1], s=8, alpha=0.4, c="#AAAAAA", label=f"Other (n={other.sum()})")
+        ax.scatter(emb[other, 0], emb[other, 1], s=8, alpha=0.45, c="#AAAAAA", label=f"Other (n={other.sum()})")
     ax.set_title("(a) Storm nature classification", fontsize=17, fontweight="bold")
-    ax.legend(fontsize=12, loc="upper right", markerscale=2.2)
+    legend_below(ax, ncol=2, fontsize=10)
     ax.grid(True, ls=":", alpha=0.4)
 
     ax = axes[0, 1]
@@ -549,7 +567,7 @@ def draw_tsne() -> None:
         m = speed_labels == lab
         ax.scatter(emb[m, 0], emb[m, 1], s=8, alpha=0.55, c=col, label=lab)
     ax.set_title("(b) Storm translation speed", fontsize=17, fontweight="bold")
-    ax.legend(fontsize=12, loc="upper right", markerscale=2.2)
+    legend_below(ax, ncol=2, fontsize=10)
     ax.grid(True, ls=":", alpha=0.4)
 
     ax = axes[1, 0]
@@ -559,7 +577,7 @@ def draw_tsne() -> None:
         m = lat_labels == lab
         ax.scatter(emb[m, 0], emb[m, 1], s=8, alpha=0.55, c=[col], label=lab)
     ax.set_title("(c) Latitude band", fontsize=17, fontweight="bold")
-    ax.legend(fontsize=12, loc="upper right", markerscale=2.2)
+    legend_below(ax, ncol=3, fontsize=9)
     ax.grid(True, ls=":", alpha=0.4)
 
     ax = axes[1, 1]
@@ -577,12 +595,18 @@ def draw_tsne() -> None:
     for ax in axes.ravel():
         ax.set_xlabel("t-SNE Dimension 1")
         ax.set_ylabel("t-SNE Dimension 2")
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
 
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
-    out = FIG / "tsne_era5_63d.png"
-    fig.savefig(out, dpi=300, bbox_inches="tight", facecolor="white")
+    fig.subplots_adjust(left=0.08, right=0.96, top=0.90, bottom=0.10, hspace=0.42, wspace=0.28)
+    waf_dir = ROOT / "Paper Writing" / "WAF"
+    waf_dir.mkdir(parents=True, exist_ok=True)
+    for out in (FIG / "tsne_era5_63d.png", waf_dir / "fig01tsne.png"):
+        fig.savefig(out, dpi=300, bbox_inches="tight", facecolor="white")
+        pdf = out.with_suffix(".pdf")
+        fig.savefig(pdf, dpi=300, bbox_inches="tight", facecolor="white")
+        print("wrote", out.name, "and", pdf.name, "->", out.parent.name)
     plt.close(fig)
-    print("wrote", out)
 
 
 # ── LAILA trajectories ──────────────────────────────────────────────────────

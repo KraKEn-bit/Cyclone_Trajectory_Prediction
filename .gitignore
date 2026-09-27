@@ -1,86 +1,48 @@
+# Secrets
+**/.cdsapirc
+**/WAITING_FOR_CDS.txt
+.env
+*.pem
 
 # Python
-
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg
-*.egg-info/
-dist/
-build/
-.eggs/
-
-
-
-
-# Jupyter
-
-.ipynb_checkpoints/
-*/.ipynb_checkpoints/*
-
-# ─────────────────────────────────────────
-# Data files (too large for GitHub)
-# Download via instructions in data/README.md
-# ─────────────────────────────────────────
-data/*.csv
-data/*.parquet
-data/*.nc
-data/*.h5
-data/*.hdf5
-
-# ─────────────────────────────────────────
-# Large prediction outputs (reproducible
-# by running the notebook — skip these)
-# ─────────────────────────────────────────
-outputs/predictions/
-
-
-
-
-
-# Model checkpoints & saved weights
-
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
-*.ckpt
-models/
-
-
-
-
-
-
-# Environments
-
-.env
 .venv/
 venv/
-env/
-ENV/
+.pytest_cache/
+.mypy_cache/
 
+# Personal manuscripts (never push to GitHub)
+**/*.tex
+**/Paper Writing/
 
+# LaTeX build junk
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.bbl
+*.blg
 
+# CatBoost / local training noise
+catboost_info/
 
+# Large geodata (track in NEW WAY/.gitignore too)
+**/*.nc
+**/*.nc.part
 
+# Optional: omit full held-out prediction trees from GitHub (large)
+# Uncomment if pushes are too big:
+# NEW WAY/results/**/task_a_test_predictions/
 
-# OS / Editor
-
+# OS / editor
 .DS_Store
 Thumbs.db
+*.swp
 .idea/
 .vscode/
-*.swp
-*.swo
 
-
-
-
-
-# Logs & temp
-*.log
-*.tmp
+# Zip archives at root (keep sources, not bundles)
+*.zip
