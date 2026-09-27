@@ -1,158 +1,119 @@
-# Horizon-Consistent Multi-Step Cyclone Trajectory Prediction
+# Horizon-Consistent Multi-Step Cyclone Trajectory Prediction over the Bay of Bengal
 
-**Bay of Bengal ∑ North Indian Ocean ∑ IBTrACS ∑ multi-horizon track forecasting**
+**IBTrACS v4 ù North Indian Ocean ù 3 h / 12 h / 24 h track forecasting**
 
-This GitHub repository holds **two related but distinct** research lines on **tropical cyclone track (position) prediction**:
+> **Anonymous repository.** This code accompanies a blind peer-review submission. Author names, institutional affiliations, and personal repository links are omitted here. If you use this work, cite the published paper when available.
 
-| Line | Paper / venue | Where in this repo |
-|------|----------------|-------------------|
-| **IBTrACS-only benchmark (ICCACCESS lineage)** | Multi-model benchmark with SECE, deep learning, zero-shot transfer (revision track) | **`Data/`**, **`Datasets/`**, **`Notebook/`**, **`Outputs/`** |
-| **ERA5-augmented leakage-aware benchmark** | *ERA5-Augmented Ensemble Learning for Multi-Horizon Tropical Cyclone Track Prediction over the Bay of Bengal* (IEEE conference draft; journal + AMS WAF variants) | **[`ERA5-NEW-Analysis/`](ERA5-NEW-Analysis/)** ó **start with [`ERA5-NEW-Analysis/README.md`](ERA5-NEW-Analysis/README.md)** |
-
-**LaTeX manuscripts are not stored in git** (private / Overleaf). Numbers for the ERA5 papers are frozen under `ERA5-NEW-Analysis/docs/paper_writeup_data/`.
+We report a **23-model** benchmark (11 classical, 9 deep, 3 proposed) on multi-horizon cyclone **track** prediction, with the **top 15 models per horizon** under a **uniform training protocol**. The primary system is the **Subset-Expert Context-Aware Ensemble (SECE)**: 28 base learners (tree models on five physics-informed feature subsets plus the full 49-D set, together with Bidirectional LSTM and CNN-GRU) fused by a context-aware **LightGBM** meta-learner at 3 h / 12 h and **Ridge** regression at 24 h, using **out-of-fold** base predictions only at the meta stage. Supplementary architectures **PRC** (Persistence Residual Cascade) and **CB+MotionNN** (CatBoost + kinematic MLP residual) are included as physics-informed baselines. A **zero-shot** evaluation on Western Pacific IBTrACS data (no retraining) assesses cross-basin transfer.
 
 ---
 
-## Repository layout (top level)
+## Key results (Bay of Bengal test split)
 
-| Path | Role |
-|------|------|
-| **[`ERA5-NEW-Analysis/`](ERA5-NEW-Analysis/)** | Locked **IBTrACS + ERA5 point** pipeline, eight-system held-out confirm, docs, figures, modeling CSVs, evaluation scripts |
-| **[`Final_Cyclone_Pred_Results_P-3/`](Final_Cyclone_Pred_Results_P-3/)** | Shared **SECE v2 trainer** and **seed protocol** used by the ERA5 line (`pipeline_common.py`, `sece_v2_train.py`, `eval_protocol.py`) |
-| **[`Data/`](Data/)** | IBTrACS v4 **download instructions** and notes for the legacy notebook workflow |
-| **[`Datasets/`](Datasets/)** | Curated CSV extracts: Bangladesh-filtered tracks, regional subsets, original IBTrACS copies, finalized modeling tables |
-| **[`Notebook/`](Notebook/)** | **`multi-horizon-finalized-experiment.ipynb`** ó end-to-end legacy multi-horizon experiment |
-| **[`Outputs/`](Outputs/)** | Saved **metrics**, **plots**, **predictions**, and **trajectory maps** from legacy runs |
-| **`README.md`** | This file (legacy + navigation) |
+**Metric:** median great-circle (Haversine) error (km).  
+**Test frame:** **3,696** multi-horizon origins from **156** held-out storms (storm-wise **70 : 15 : 15**, seed **42**). Same test origins for all models and horizons (see revision manuscript Table I).
 
-Do **not** treat `ERA5-NEW-Analysis/` as a rename of the old root README content: the **long ERA5 methods, tables, and reproduction steps live only in that subfolder**.
+| Horizon | SECE median | Best comparator (median) | Note |
+|--------:|------------:|---------------------------:|------|
+| **3 h** | **4.40** | Stacking (RF+XGB+LGB) **4.43** | SECE lowest; paired Wilcoxon vs. stacking *p* = 0.14 |
+| **12 h** | **30.00** | Stacking **29.88** | Statistically tied (*p* = 0.15 vs. stacking) |
+| **24 h** | **86.44** | LightGBM **88.12** | SECE lowest; vs. stacking *p* = 0.12 |
+
+SECE is significantly better than single LightGBM at 3 h (*p* < 0.001). Under the fixed budget, **tree-based models outperform standalone deep learning** at every horizon; CNN-GRU 24 h median **102.17 km** vs. LightGBM **88.12 km**.
 
 ---
 
-## Legacy line: IBTrACS-only 15-model benchmark
+## Zero-shot cross-basin (Western Pacific)
 
-### Summary
+Models applied **without retraining** to a Western Pacific IBTrACS extract (**4,140** storms; South China Sea region). Median Haversine error (km):
 
-> A comprehensive **23-candidate** benchmark (11 classical, 9 deep, 3 proposed architectures), reporting the **top 15 per horizon** under a **uniform training protocol** (lr = 0.01, 300 epochs/estimators, batch 128, dropout 0.2, storm-wise **70 : 15 : 15** split, seed 42). The headline system is **SECE (Subset-Expert Context-Aware Ensemble)** ó hierarchical stacking with **28 base learners** across physics-informed subsets plus **BLSTM / CNN-GRU** sequence models, fused by horizon-specific meta-learners (LightGBM router at 3 h / 12 h, Ridge at 24 h), trained on **out-of-fold** base predictions only.
+| Model | 3 h (WP) | 12 h (WP) | 24 h (WP) |
+|-------|---------:|----------:|----------:|
+| Random Forest | **6.99** | 59.81 | 180.80 |
+| CB+MotionNN | 7.92 | **54.02** | **166.30** |
+| SECE | 7.47 | 59.53 | 172.38 |
+| CNN-GRU | 27.21 | 109.59 | 223.69 |
 
-### Key results (Bay of Bengal, in-distribution)
+Trees transfer with modest degradation; **CB+MotionNN** achieves the strongest among proposed architectures at **12 h** and **24 h** in WP. Deep sequence models degrade more sharply under domain shift.
 
-Evaluated on **312 Bay of Bengal cyclones (1990ñ2022)** after filtering; primary metric: **median Haversine error (km)**.
+---
 
-| Horizon | SECE median | Notes |
-|--------:|------------:|-------|
-| **3 h** | **4.42 km** | Lowest in benchmark (~4.40 km in revised table wording) |
-| **12 h** | **29.77 km** | Statistically tied with smaller stacking ensemble |
-| **24 h** | **86.28 km** | Lowest median among reported systems |
+## Dataset and features
 
-### Zero-shot cross-basin (Western Pacific)
+**Source:** IBTrACS v4, North Indian Ocean ([NOAA NCEI](https://www.ncei.noaa.gov/products/international-best-track-archive)).
 
-Models evaluated on **South China Sea / WNP** typhoon data **without retraining**:
+After quality control: **46,053** points, **1,519** storms (**1,427** Bay of Bengal genesis). Multi-horizon targets (3 / 12 / 24 h) require sufficient forward track: **1,031** storms, **24,287** origins. Storm-wise split (seed 42): **721 / 154 / 156** train / val / test storms; reported BoB medians use the **3,696**-origin test set (**149** BoB genesis, **7** non-BoB).
 
-| Horizon | Best transfer (reported) |
-|--------:|--------------------------|
-| **3 h** | Random Forest (~6.99 km) |
-| **12 h** | CB+MotionNN (~54.02 km) |
-| **24 h** | CB+MotionNN (~166.30 km) |
-
-### Proposed architectures (legacy narrative)
-
-1. **SECE** ó Tier-1: CatBoost, XGBoost, LightGBM, Random Forest on **six** feature subsets + BLSTM/CNN-GRU; Tier-2: context-aware fusion (9 storm-level router features at short lead).
-2. **PRC (Persistence Residual Cascade)** ó Persistence prior + LightGBM residual in **km**, mapped back to ?lat/?lon.
-3. **CB+MotionNN** ó CatBoost + **64-32-16** MLP kinematic residual correction; strongest **cross-basin** performer in this study.
-
-### Dataset (legacy `Data/` workflow)
-
-From **`Data/readme.md`** (IBTrACS v4, North Indian Ocean):
-
-| Item | Value |
-|------|--------|
-| Source | IBTrACS v4 CSV (`ibtracs.NI.list.v04r01.csv`) |
-| Full archive span | 1842ñ2024 |
-| **Evaluation window** | **1990ñ2022 (Bay of Bengal)** |
-| BoB evaluation storms | **312** |
-| Train / val / test (multi-horizon example) | 16,712 / 3,879 / 3,696 samples (721 / 154 / 156 storms) |
-
-Download:
+**Download (North Indian Ocean CSV):**
 
 ```bash
 wget https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/ibtracs.NI.list.v04r01.csv
 ```
 
-Place the CSV under **`Data/`**, then run **`Notebook/multi-horizon-finalized-experiment.ipynb`** from the top.
+Place the file under **`Data/`**, then run **`Notebook/multi-horizon-finalized-experiment.ipynb`**. Processed tables may appear under **`Datasets/`**; run outputs under **`Outputs/`** (metrics, plots, predictions, trajectory maps).
 
-### Engineered features (49-D, legacy)
+### 49 engineered features
 
-| Subset | Count | Content |
-|--------|------:|---------|
-| Position | 9 | Lat/lon, interaction, lags t?1Öt?3 |
-| Motion | 16 | Displacements, speed, bearing sin/cos, acceleration |
-| Physics | 7 | Curvature, stability, recurvature proxy, seasonality |
-| Environment | 8 | Distance to land, landfall, wind estimate, BoB centroid distance |
-| Missingness | 9 | Imputation / wind observation flags |
+Four physics-informed groups plus missingness indicators (revision manuscript ùII):
 
-t-SNE on this feature space is discussed in the legacy write-up as motivating subset experts.
+| Group | Count | Content |
+|-------|------:|---------|
+| **Position** | 9 | Lat/lon, interaction, lags *t*?1ù*t*?3 |
+| **Motion** | 16 | Displacements, speed, bearing sin/cos, acceleration, trends |
+| **Physics** | 7 | Curvature, stability, consistency, seasonality, recurvature proxy |
+| **Environment** | 8 | Distance to land, landfall, wind estimate, speed/dir, BoB centroid distance, rates of change |
+| **Missingness** | 9 | Flags for imputed lags and wind |
 
-### Where legacy artifacts live
-
-| Folder | Typical contents |
-|--------|------------------|
-| **`Datasets/`** | `Original Dataset IBTRACS`, Bangladesh-filtered 1942ñ2025, South Asian 2010ñ2025, **`Final Dataset`** modeling exports |
-| **`Outputs/Metrics`** | Error summaries by model and horizon |
-| **`Outputs/Plots`** | Benchmark bar charts, comparisons |
-| **`Outputs/Predictions`** | Per-storm or pooled prediction files |
-| **`Outputs/Trajectory_Maps`** | Map overlays for case storms |
+**t-SNE** on the 49-D training space (Fig. 2 in the paper) motivates subset-expert design.
 
 ---
 
-## Shared trainer: `Final_Cyclone_Pred_Results_P-3/`
+## Method summary
 
-The ERA5 benchmark **imports training logic from here** (sibling path `../Final_Cyclone_Pred_Results_P-3/`):
+### SECE (Tier 1 + Tier 2)
 
-| File | Purpose |
-|------|---------|
-| `pipeline_common.py` | Shared data loading, feature columns, training utilities |
-| `sece_v2_train.py` | SECE v2 Phase 3 subset-expert training and fusion |
-| `eval_protocol.py` | **Locked seed lists:** dev `{3,4,5,6,8,9,10,11,14}`, held-out `{0,1,2,7,13,99,123,2024,2026}` |
+- **Tier 1:** 28 predictive signals ù CatBoost, XGBoost, LightGBM, Random Forest on **five** subset views **plus full features**, plus BLSTM and CNN-GRU.
+- **Tier 2:** LightGBM **context router** (9 storm-level features) at **3 h / 12 h**; **Ridge** stack at **24 h**. Meta-learners trained on **validation out-of-fold** base predictions only.
 
-Other Python modules may exist in your local clone from earlier experiments; the **minimal public set** above is what the ERA5 held-out scripts require.
+### PRC
 
----
+Persistence extrapolation + LightGBM residual in **km**, mapped to ?lat / ?lon.
 
-## ERA5 line (current reproducible benchmark)
+### CB+MotionNN
 
-**Do not duplicate that documentation here.** The conference/journal/WAF claims ó **852** QC storms, **63-D** inputs (49 kinematic + **14 ERA5 point**), **3 / 12 / 24 / 48 h**, leakage correction, Wilcoxon + Bonferroni, environ expert, negative spatial-patch result ó are documented with **folder maps, script index, and reproduction commands** in:
+CatBoost trajectory + **64-32-16** MLP (**MotionNN**) on kinematic residuals in km space.
 
-**? [`ERA5-NEW-Analysis/README.md`](ERA5-NEW-Analysis/README.md)**  
-**? [`ERA5-NEW-Analysis/docs/PROJECT_COMPLETE_GUIDE.md`](ERA5-NEW-Analysis/docs/PROJECT_COMPLETE_GUIDE.md)**
+### Fair comparison protocol
 
-Held-out SECE medians (km): **4.895 ∑ 35.538 ∑ 101.186 ∑ 246.331** @ 3 / 12 / 24 / 48 h (see `ERA5-NEW-Analysis/docs/paper_writeup_data/01_heldout_comparison_ci_wilcoxon.csv`).
+All **23** candidates share: lr **0.01**, **300** epochs/estimators, batch **128**, dropout **0.2**, storm-wise **70 : 15 : 15**, seed **42**.
 
 ---
 
-## Relationship between the two lines
+## Reproducing experiments
 
-| Topic | Legacy (`Notebook/` / ICCACCESS) | ERA5 (`ERA5-NEW-Analysis/`) |
-|-------|----------------------------------|-----------------------------|
-| Features | 49-D track engineering | **63-D** (+ ERA5 at storm centre) |
-| Sample framing | 312 BoB storms, 1990ñ2022 (paper wording) | **852** QC storms, genesis **1940ñ2024** |
-| Horizons | 3 / 12 / 24 h | 3 / 12 / 24 / **48 h** |
-| Deep models | In benchmark narrative (top-15 table) | **Scoped out** of locked held-out confirm |
-| Evaluation | Single-split / pre-leakage-fix era | **Dev vs held-out seeds**, significance testing |
-| Cross-basin | Zero-shot China/WNP reported | **Not** part of locked ERA5 confirm |
+1. Install dependencies from the notebook / project environment used in **`Notebook/multi-horizon-finalized-experiment.ipynb`**.
+2. Ensure IBTrACS NI CSV is in **`Data/`** (see above).
+3. Execute the notebook pipeline or saved artifacts in **`Outputs/`** for benchmark figures and tables aligned with the submission.
 
-Both can coexist: cite **legacy notebooks + Outputs** for the older study; cite **`ERA5-NEW-Analysis/` + commit hash** for the ERA5-augmented papers.
+Figures referenced in the paper (e.g. 3 h benchmark bar chart, SECE architecture diagram, t-SNE, Cyclone Titli case study) correspond to assets under **`Outputs/`** and **`Notebook/`** outputs when regenerated locally.
+
+---
+
+## Limitations (summary)
+
+- Cross-basin evaluation is **Western Pacific zero-shot** only; Atlantic transfer not studied.
+- Features are **IBTrACS-derived kinematics** only (no gridded atmospheric reanalysis in this benchmark).
+- Horizons capped at **24 h** in the reported benchmark.
+- Fixed hyperparameter budget may understate tuned deep-learning ceilings.
 
 ---
 
 ## Citation
 
-Until a DOI is available, cite the appropriate manuscript (when published) and:
-
-`https://github.com/KraKEn-bit/Cyclone_Trajectory_Prediction`
+If you use this code, cite the **peer-reviewed publication** when available. Do not cite this repository URL during blind review unless the venue supplies an anonymous artifact link.
 
 ---
 
-## License and data terms
+## License and data
 
-See repository license file. **IBTrACS:** [NOAA NCEI](https://www.ncei.noaa.gov/products/international-best-track-archive). **ERA5** (ERA5 line only): [Copernicus CDS terms](https://cds.climate.copernicus.eu/).
+See the repository license file. **IBTrACS** use is subject to [NOAA NCEI terms](https://www.ncei.noaa.gov/products/international-best-track-archive).
