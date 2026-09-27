@@ -2,7 +2,7 @@
 
 **IBTrACS v4 | North Indian Ocean | 3 h / 12 h / 24 h track forecasting**
 
-> **Anonymous repository.** This code accompanies a blind peer-review submission. Author names, institutional affiliations, and personal repository links are omitted here. If you use this work, cite the published paper when available.
+> **Anonymous repository.** Code release: full source, configs, and reproduction scripts will be published upon paper acceptance. Until then, this repository documents the research contribution without releasing implementation details.
 
 We report a **23-model** benchmark (11 classical, 9 deep, 3 proposed) on multi-horizon cyclone **track** prediction, with the **top 15 models per horizon** under a **uniform training protocol**. The primary system is the **Subset-Expert Context-Aware Ensemble (SECE)**: 28 base learners (tree models on five physics-informed feature subsets plus the full 49-D set, together with Bidirectional LSTM and CNN-GRU) fused by a context-aware **LightGBM** meta-learner at 3 h / 12 h and **Ridge** regression at 24 h, using **out-of-fold** base predictions only at the meta stage. Supplementary architectures **PRC** (Persistence Residual Cascade) and **CB+MotionNN** (CatBoost + kinematic MLP residual) are included as physics-informed baselines. A **zero-shot** evaluation on Western Pacific IBTrACS data (no retraining) assesses cross-basin transfer.
 
@@ -99,20 +99,6 @@ Figures referenced in the paper (3 h benchmark bar chart, SECE architecture diag
 
 ---
 
-## Limitations (summary)
-
-- Cross-basin evaluation is **Western Pacific zero-shot** only; Atlantic transfer not studied.
-- Features are **IBTrACS-derived kinematics** only (no gridded atmospheric reanalysis in this benchmark).
-- Horizons capped at **24 h** in the reported benchmark.
-- Fixed hyperparameter budget may understate tuned deep-learning ceilings.
-
----
-
-## Citation
-
-If you use this code, cite the **peer-reviewed publication** when available. Do not cite this repository URL during blind review unless the venue supplies an anonymous artifact link.
-
----
 
 ## License and data
 
