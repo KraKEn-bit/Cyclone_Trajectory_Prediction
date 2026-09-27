@@ -99,21 +99,4 @@ Figures referenced in the paper (e.g. 3 h benchmark bar chart, SECE architecture
 
 ---
 
-## Limitations (summary)
-
-- Cross-basin evaluation is **Western Pacific zero-shot** only; Atlantic transfer not studied.
-- Features are **IBTrACS-derived kinematics** only (no gridded atmospheric reanalysis in this benchmark).
-- Horizons capped at **24 h** in the reported benchmark.
-- Fixed hyperparameter budget may understate tuned deep-learning ceilings.
-
----
-
-## Citation
-
-If you use this code, cite the **peer-reviewed publication** when available. Do not cite this repository URL during blind review unless the venue supplies an anonymous artifact link.
-
----
-
-## License and data
-
 See the repository license file. **IBTrACS** use is subject to [NOAA NCEI terms](https://www.ncei.noaa.gov/products/international-best-track-archive).
