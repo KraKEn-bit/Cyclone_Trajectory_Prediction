@@ -40,7 +40,7 @@ Trees transfer with modest degradation; **CB+MotionNN** achieves the strongest a
 
 ## Dataset and features
 
-**Source:** IBTrACS v4, North Indian Ocean ([NOAA NCEI](https://www.ncei.noaa.gov/products/international-best-track-archive)).
+**Source:** IBTrACS, North Indian Ocean ([NOAA NCEI](https://www.ncei.noaa.gov/products/international-best-track-archive)).
 
 After quality control: **46,053** points, **1,519** storms (**1,427** Bay of Bengal genesis). Multi-horizon targets (3 / 12 / 24 h) require sufficient forward track: **1,031** storms, **24,287** origins. Storm-wise split (seed 42): **721 / 154 / 156** train / val / test storms; reported BoB medians use the **3,696**-origin test set (**149** BoB genesis, **7** non-BoB).
 
